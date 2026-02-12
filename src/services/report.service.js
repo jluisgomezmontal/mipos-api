@@ -326,8 +326,9 @@ class ReportService {
       monthQuery.branchId = branchId;
     }
 
-    const todaySales = await Sale.find(todayQuery);
-    const monthSales = await Sale.find(monthQuery);
+    // Optimizar consultas seleccionando solo los campos necesarios
+    const todaySales = await Sale.find(todayQuery).select('total').lean();
+    const monthSales = await Sale.find(monthQuery).select('total').lean();
 
     const todayRevenue = todaySales.reduce((sum, sale) => sum + sale.total, 0);
     const monthRevenue = monthSales.reduce((sum, sale) => sum + sale.total, 0);
@@ -336,7 +337,7 @@ class ReportService {
       tenantId,
       createdAt: { $gte: today, $lte: endOfToday },
       status: PAYMENT_STATUS.COMPLETED,
-    });
+    }).select('amount').lean();
 
     const todayPaymentsTotal = todayPayments.reduce((sum, payment) => sum + payment.amount, 0);
 
