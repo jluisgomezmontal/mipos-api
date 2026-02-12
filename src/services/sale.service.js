@@ -62,10 +62,15 @@ class SaleService {
 
         const unitPrice = item.unitPrice || product.price;
         const itemDiscount = item.discount || 0;
-        const itemSubtotal = unitPrice * item.quantity - itemDiscount;
         const itemTaxRate = product.taxRate || taxRate;
-        const itemTaxAmount = (itemSubtotal * itemTaxRate) / 100;
-        const itemTotal = itemSubtotal + itemTaxAmount;
+        
+        // El precio ya incluye IVA, por lo tanto:
+        // total = precio con IVA
+        // subtotal = total / (1 + taxRate/100)
+        // taxAmount = total - subtotal
+        const itemTotal = unitPrice * item.quantity - itemDiscount;
+        const itemSubtotal = itemTotal / (1 + itemTaxRate / 100);
+        const itemTaxAmount = itemTotal - itemSubtotal;
 
         processedItems.push({
           productId: product._id,
@@ -88,7 +93,9 @@ class SaleService {
       }
 
       const totalTaxAmount = processedItems.reduce((sum, item) => sum + item.taxAmount, 0);
-      const total = subtotal + totalTaxAmount - discount;
+      // El total ya incluye el IVA, solo restamos el descuento general si existe
+      const totalBeforeDiscount = processedItems.reduce((sum, item) => sum + item.total, 0);
+      const total = totalBeforeDiscount - discount;
 
       const saleNumber = await this.generateSaleNumber(tenantId);
 

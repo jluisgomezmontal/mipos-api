@@ -39,7 +39,7 @@ class InventoryService {
       .populate('branchId', 'name code');
 
     if (!inventory) {
-      throw new NotFoundError('Inventory record not found');
+      throw new NotFoundError('Registro de inventario no encontrado');
     }
 
     return inventory;
@@ -76,16 +76,16 @@ class InventoryService {
 
       const product = await Product.findOne({ _id: productId, tenantId });
       if (!product) {
-        throw new NotFoundError('Product not found');
+        throw new NotFoundError('Producto no encontrado');
       }
 
       if (!product.trackInventory) {
-        throw new AppError('Product does not track inventory', 400);
+        throw new AppError('El producto no tiene seguimiento de inventario', 400);
       }
 
       const branch = await Branch.findOne({ _id: branchId, tenantId });
       if (!branch) {
-        throw new NotFoundError('Branch not found');
+        throw new NotFoundError('Sucursal no encontrada');
       }
 
       let inventory = await Inventory.findOne({
@@ -102,7 +102,7 @@ class InventoryService {
       } else if (type === INVENTORY_MOVEMENT_TYPE.OUT) {
         newQuantity = previousQuantity - quantity;
         if (newQuantity < 0) {
-          throw new AppError('Insufficient inventory', 400);
+          throw new AppError('Inventario insuficiente', 400);
         }
       } else if (type === INVENTORY_MOVEMENT_TYPE.ADJUSTMENT) {
         newQuantity = quantity;
@@ -183,6 +183,24 @@ class InventoryService {
     return movements;
   }
 
+  async updateInventory(tenantId, inventoryId, settings) {
+    const inventory = await Inventory.findOne({
+      _id: inventoryId,
+      tenantId,
+    })
+      .populate('productId', 'sku name price category')
+      .populate('branchId', 'name code');
+
+    if (!inventory) {
+      throw new NotFoundError('Registro de inventario no encontrado');
+    }
+
+    Object.assign(inventory, settings);
+    await inventory.save();
+
+    return inventory;
+  }
+
   async updateInventorySettings(tenantId, productId, branchId, settings) {
     const inventory = await Inventory.findOne({
       tenantId,
@@ -191,7 +209,7 @@ class InventoryService {
     });
 
     if (!inventory) {
-      throw new NotFoundError('Inventory record not found');
+      throw new NotFoundError('Registro de inventario no encontrado');
     }
 
     Object.assign(inventory, settings);
@@ -221,7 +239,7 @@ class InventoryService {
         });
 
         if (!inventory || inventory.quantity < item.quantity) {
-          throw new AppError(`Insufficient inventory for product: ${product.name}`, 400);
+          throw new AppError(`Inventario insuficiente para el producto: ${product.name}`, 400);
         }
 
         const previousQuantity = inventory.quantity;
@@ -240,7 +258,7 @@ class InventoryService {
               quantity: item.quantity,
               previousQuantity,
               newQuantity,
-              reference: 'Sale',
+              reference: 'Venta',
               referenceId: saleId,
               userId,
             },

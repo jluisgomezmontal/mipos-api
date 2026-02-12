@@ -16,15 +16,15 @@ class ReportController {
   async getTopProducts(req, res, next) {
     try {
       const { startDate, endDate, branchId, limit = 10 } = req.query;
-      const topProducts = await reportService.getTopProducts(
+      const report = await reportService.getTopProducts(
         req.tenantId,
         startDate,
         endDate,
         branchId,
-        limit
+        parseInt(limit)
       );
 
-      successResponse(res, { topProducts }, 'Top products report generated successfully');
+      successResponse(res, report, 'Top products report generated successfully');
     } catch (error) {
       next(error);
     }
@@ -33,9 +33,9 @@ class ReportController {
   async getRevenueByBranch(req, res, next) {
     try {
       const { startDate, endDate } = req.query;
-      const revenue = await reportService.getRevenueByBranch(req.tenantId, startDate, endDate);
+      const report = await reportService.getRevenueByBranch(req.tenantId, startDate, endDate);
 
-      successResponse(res, { revenue }, 'Revenue by branch report generated successfully');
+      successResponse(res, report, 'Revenue by branch report generated successfully');
     } catch (error) {
       next(error);
     }

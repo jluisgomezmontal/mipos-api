@@ -57,6 +57,21 @@ class InventoryController {
     }
   }
 
+  async updateInventory(req, res, next) {
+    try {
+      const { id } = req.params;
+      const inventory = await inventoryService.updateInventory(
+        req.tenantId,
+        id,
+        req.body
+      );
+
+      successResponse(res, { inventory }, 'Inventory updated successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async updateInventorySettings(req, res, next) {
     try {
       const { productId, branchId } = req.params;

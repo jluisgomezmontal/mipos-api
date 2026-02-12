@@ -29,6 +29,13 @@ router.post(
 router.get('/movements', inventoryController.getInventoryMovements);
 
 router.patch(
+  '/:id',
+  authorize(USER_ROLES.OWNER, USER_ROLES.ADMIN),
+  validate(updateInventorySchema),
+  inventoryController.updateInventory
+);
+
+router.patch(
   '/:productId/:branchId',
   authorize(USER_ROLES.OWNER, USER_ROLES.ADMIN),
   validate(updateInventorySchema),

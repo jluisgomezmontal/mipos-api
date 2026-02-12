@@ -43,34 +43,35 @@ class ReportService {
       return acc;
     }, {});
 
-    const dailySales = sales.reduce((acc, sale) => {
+    const dailySalesMap = sales.reduce((acc, sale) => {
       const date = sale.createdAt.toISOString().split('T')[0];
       if (!acc[date]) {
         acc[date] = {
-          count: 0,
-          revenue: 0,
+          date,
+          totalSales: 0,
+          totalRevenue: 0,
         };
       }
-      acc[date].count += 1;
-      acc[date].revenue += sale.total;
+      acc[date].totalSales += 1;
+      acc[date].totalRevenue += sale.total;
       return acc;
     }, {});
 
+    // Convertir el objeto a array y calcular ticket promedio
+    const dailySales = Object.values(dailySalesMap).map(day => ({
+      ...day,
+      averageTicket: day.totalSales > 0 ? day.totalRevenue / day.totalSales : 0,
+    })).sort((a, b) => new Date(a.date) - new Date(b.date));
+
     return {
-      period: {
-        startDate,
-        endDate,
-      },
+      sales: dailySales,
       summary: {
         totalSales,
         totalRevenue,
-        totalDiscount,
-        totalTax,
-        averageSaleValue,
+        averageTicket: averageSaleValue,
+        startDate,
+        endDate,
       },
-      salesByStatus,
-      salesByBranch,
-      dailySales,
     };
   }
 
@@ -122,7 +123,24 @@ class ReportService {
       .sort((a, b) => b.quantitySold - a.quantitySold)
       .slice(0, limit);
 
-    return topProducts;
+    const totalQuantitySold = topProducts.reduce((sum, p) => sum + p.quantitySold, 0);
+    const totalRevenue = topProducts.reduce((sum, p) => sum + p.totalRevenue, 0);
+
+    return {
+      products: topProducts.map(p => ({
+        productId: p.productId,
+        productName: p.name,
+        sku: p.sku,
+        quantitySold: p.quantitySold,
+        totalRevenue: p.totalRevenue,
+        profit: p.totalProfit,
+      })),
+      summary: {
+        totalProducts: topProducts.length,
+        totalQuantitySold,
+        totalRevenue,
+      },
+    };
   }
 
   async getRevenueByBranch(tenantId, startDate, endDate) {
@@ -162,7 +180,22 @@ class ReportService {
       return acc;
     }, {});
 
-    return Object.values(revenueByBranch).sort((a, b) => b.totalRevenue - a.totalRevenue);
+    const branches = Object.values(revenueByBranch).map(branch => ({
+      ...branch,
+      averageTicket: branch.totalSales > 0 ? branch.totalRevenue / branch.totalSales : 0,
+    })).sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+    const totalSales = branches.reduce((sum, b) => sum + b.totalSales, 0);
+    const totalRevenue = branches.reduce((sum, b) => sum + b.totalRevenue, 0);
+
+    return {
+      branches,
+      summary: {
+        totalBranches: branches.length,
+        totalSales,
+        totalRevenue,
+      },
+    };
   }
 
   async getPaymentMethodsReport(tenantId, startDate, endDate, branchId = null) {
