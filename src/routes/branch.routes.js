@@ -13,7 +13,7 @@ router.use(injectTenantContext);
 
 router.post(
   '/',
-  authorize(USER_ROLES.OWNER, USER_ROLES.ADMIN),
+  authorize(USER_ROLES.OWNER),
   validate(createBranchSchema),
   branchController.createBranch
 );
@@ -24,7 +24,7 @@ router.get('/:id', branchController.getBranchById);
 
 router.patch(
   '/:id',
-  authorize(USER_ROLES.OWNER, USER_ROLES.ADMIN),
+  authorize(USER_ROLES.OWNER),
   validate(updateBranchSchema),
   branchController.updateBranch
 );

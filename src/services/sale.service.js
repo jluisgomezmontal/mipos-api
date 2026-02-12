@@ -139,13 +139,18 @@ class SaleService {
     }
   }
 
-  async getSales(tenantId, filters = {}, pagination = {}) {
+  async getSales(tenantId, filters = {}, pagination = {}, user = null) {
     const { branchId, status, startDate, endDate, page = 1, limit = 20 } = {
       ...filters,
       ...pagination,
     };
 
     const query = { tenantId };
+
+    // Si el usuario es CASHIER, solo puede ver sus propias ventas
+    if (user && user.role === 'CASHIER') {
+      query.cashierId = user.userId;
+    }
 
     if (branchId) {
       query.branchId = branchId;

@@ -18,7 +18,8 @@ class SaleController {
       const { sales, pagination } = await saleService.getSales(
         req.tenantId,
         req.query,
-        req.query
+        req.query,
+        req.user
       );
 
       paginatedResponse(res, { sales }, pagination, 'Sales retrieved successfully');

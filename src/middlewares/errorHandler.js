@@ -3,13 +3,13 @@ import { HTTP_STATUS } from '../utils/constants.js';
 import env from '../config/env.js';
 
 const handleCastError = (error) => {
-  const message = `Invalid ${error.path}: ${error.value}`;
+  const message = `Valor inválido para ${error.path}: ${error.value}`;
   return new AppError(message, HTTP_STATUS.BAD_REQUEST);
 };
 
 const handleDuplicateFieldsError = (error) => {
   const field = Object.keys(error.keyValue)[0];
-  const message = `Duplicate value for field: ${field}`;
+  const message = `Ya existe un registro con este valor para el campo: ${field}`;
   return new AppError(message, HTTP_STATUS.CONFLICT);
 };
 
@@ -18,7 +18,7 @@ const handleValidationError = (error) => {
     field: err.path,
     message: err.message,
   }));
-  return new ValidationError('Validation failed', errors);
+  return new ValidationError('Error de validación', errors);
 };
 
 const sendErrorDev = (err, res) => {
@@ -43,7 +43,7 @@ const sendErrorProd = (err, res) => {
     console.error('❌ ERROR:', err);
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: 'Something went wrong',
+      message: 'Algo salió mal en el servidor',
     });
   }
 };
@@ -67,6 +67,6 @@ export const errorHandler = (err, req, res, next) => {
 };
 
 export const notFound = (req, res, next) => {
-  const error = new AppError(`Route not found: ${req.originalUrl}`, HTTP_STATUS.NOT_FOUND);
+  const error = new AppError(`Ruta no encontrada: ${req.originalUrl}`, HTTP_STATUS.NOT_FOUND);
   next(error);
 };

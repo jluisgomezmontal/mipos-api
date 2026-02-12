@@ -9,7 +9,7 @@ class ProductService {
     });
 
     if (existingProduct) {
-      throw new ConflictError('Product with this SKU already exists');
+      throw new ConflictError('Ya existe un producto con este SKU');
     }
 
     if (productData.barcode) {
@@ -19,7 +19,7 @@ class ProductService {
       });
 
       if (existingBarcode) {
-        throw new ConflictError('Product with this barcode already exists');
+        throw new ConflictError('Ya existe un producto con este código de barras');
       }
     }
 
@@ -72,7 +72,7 @@ class ProductService {
     const product = await Product.findOne({ _id: productId, tenantId });
 
     if (!product) {
-      throw new NotFoundError('Product not found');
+      throw new NotFoundError('Producto no encontrado');
     }
 
     return product;
@@ -82,7 +82,7 @@ class ProductService {
     const product = await Product.findOne({ _id: productId, tenantId });
 
     if (!product) {
-      throw new NotFoundError('Product not found');
+      throw new NotFoundError('Producto no encontrado');
     }
 
     if (updateData.sku && updateData.sku !== product.sku) {
@@ -93,7 +93,7 @@ class ProductService {
       });
 
       if (existingProduct) {
-        throw new ConflictError('Product with this SKU already exists');
+        throw new ConflictError('Ya existe un producto con este SKU');
       }
     }
 
@@ -105,7 +105,7 @@ class ProductService {
       });
 
       if (existingBarcode) {
-        throw new ConflictError('Product with this barcode already exists');
+        throw new ConflictError('Ya existe un producto con este código de barras');
       }
     }
 
@@ -119,7 +119,7 @@ class ProductService {
     const product = await Product.findOne({ _id: productId, tenantId });
 
     if (!product) {
-      throw new NotFoundError('Product not found');
+      throw new NotFoundError('Producto no encontrado');
     }
 
     await Product.findByIdAndUpdate(productId, { isActive: false });
@@ -131,7 +131,7 @@ class ProductService {
     const product = await Product.findOne({ tenantId, sku, isActive: true });
 
     if (!product) {
-      throw new NotFoundError('Product not found');
+      throw new NotFoundError('Producto no encontrado');
     }
 
     return product;
@@ -141,7 +141,7 @@ class ProductService {
     const product = await Product.findOne({ tenantId, barcode, isActive: true });
 
     if (!product) {
-      throw new NotFoundError('Product not found');
+      throw new NotFoundError('Producto no encontrado');
     }
 
     return product;

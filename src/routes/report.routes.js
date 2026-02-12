@@ -41,4 +41,11 @@ router.get(
 
 router.get('/dashboard', reportController.getDashboardStats);
 
+router.get(
+  '/sales-by-user',
+  authorize(USER_ROLES.OWNER, USER_ROLES.ADMIN),
+  validate(salesReportSchema),
+  reportController.getSalesByUser
+);
+
 export default router;

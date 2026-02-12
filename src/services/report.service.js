@@ -3,7 +3,7 @@ import Payment from '../models/Payment.js';
 import { SALE_STATUS, PAYMENT_STATUS } from '../utils/constants.js';
 
 class ReportService {
-  async getSalesReport(tenantId, startDate, endDate, branchId = null) {
+  async getSalesReport(tenantId, startDate, endDate, branchId = null, user = null, filterUserId = null) {
     const query = {
       tenantId,
       createdAt: {
@@ -12,6 +12,15 @@ class ReportService {
       },
       status: { $ne: SALE_STATUS.CANCELLED },
     };
+
+    // Si el usuario es CASHIER, solo puede ver sus propias ventas
+    if (user && user.role === 'CASHIER') {
+      query.cashierId = user.userId;
+    }
+    // Si OWNER/ADMIN especifica un userId, filtrar por ese cajero
+    else if (filterUserId) {
+      query.cashierId = filterUserId;
+    }
 
     if (branchId) {
       query.branchId = branchId;
@@ -75,11 +84,20 @@ class ReportService {
     };
   }
 
-  async getTopProducts(tenantId, startDate = null, endDate = null, branchId = null, limit = 10) {
+  async getTopProducts(tenantId, startDate = null, endDate = null, branchId = null, limit = 10, user = null, filterUserId = null) {
     const query = {
       tenantId,
       status: { $ne: SALE_STATUS.CANCELLED },
     };
+
+    // Si el usuario es CASHIER, solo puede ver sus propias ventas
+    if (user && user.role === 'CASHIER') {
+      query.cashierId = user.userId;
+    }
+    // Si OWNER/ADMIN especifica un userId, filtrar por ese cajero
+    else if (filterUserId) {
+      query.cashierId = filterUserId;
+    }
 
     if (startDate && endDate) {
       query.createdAt = {
@@ -143,7 +161,7 @@ class ReportService {
     };
   }
 
-  async getRevenueByBranch(tenantId, startDate, endDate) {
+  async getRevenueByBranch(tenantId, startDate, endDate, user = null, filterUserId = null) {
     const query = {
       tenantId,
       createdAt: {
@@ -152,6 +170,15 @@ class ReportService {
       },
       status: { $ne: SALE_STATUS.CANCELLED },
     };
+
+    // Si el usuario es CASHIER, solo puede ver sus propias ventas
+    if (user && user.role === 'CASHIER') {
+      query.cashierId = user.userId;
+    }
+    // Si OWNER/ADMIN especifica un userId, filtrar por ese cajero
+    else if (filterUserId) {
+      query.cashierId = filterUserId;
+    }
 
     const sales = await Sale.find(query).populate('branchId', 'name code');
 
@@ -198,9 +225,32 @@ class ReportService {
     };
   }
 
-  async getPaymentMethodsReport(tenantId, startDate, endDate, branchId = null) {
+  async getPaymentMethodsReport(tenantId, startDate, endDate, branchId = null, user = null, filterUserId = null) {
+    const saleQuery = {
+      tenantId,
+      createdAt: {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      },
+      status: { $ne: SALE_STATUS.CANCELLED },
+    };
+
+    // Si el usuario es CASHIER, solo puede ver sus propias ventas
+    if (user && user.role === 'CASHIER') {
+      saleQuery.cashierId = user.userId;
+    }
+    // Si OWNER/ADMIN especifica un userId, filtrar por ese cajero
+    else if (filterUserId) {
+      saleQuery.cashierId = filterUserId;
+    }
+
+    // Obtener los IDs de las ventas del cajero
+    const sales = await Sale.find(saleQuery).select('_id');
+    const saleIds = sales.map(s => s._id);
+
     const query = {
       tenantId,
+      saleId: { $in: saleIds },
       createdAt: {
         $gte: new Date(startDate),
         $lte: new Date(endDate),
@@ -239,7 +289,7 @@ class ReportService {
     return Object.values(paymentsByMethod).sort((a, b) => b.totalAmount - a.totalAmount);
   }
 
-  async getDashboardStats(tenantId, branchId = null) {
+  async getDashboardStats(tenantId, branchId = null, user = null, filterUserId = null) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -259,6 +309,17 @@ class ReportService {
       createdAt: { $gte: startOfMonth, $lte: endOfToday },
       status: { $ne: SALE_STATUS.CANCELLED },
     };
+
+    // Si el usuario es CASHIER, solo puede ver sus propias ventas
+    if (user && user.role === 'CASHIER') {
+      todayQuery.cashierId = user.userId;
+      monthQuery.cashierId = user.userId;
+    }
+    // Si OWNER/ADMIN especifica un userId, filtrar por ese cajero
+    else if (filterUserId) {
+      todayQuery.cashierId = filterUserId;
+      monthQuery.cashierId = filterUserId;
+    }
 
     if (branchId) {
       todayQuery.branchId = branchId;
@@ -288,6 +349,92 @@ class ReportService {
       thisMonth: {
         sales: monthSales.length,
         revenue: monthRevenue,
+      },
+    };
+  }
+
+  async getSalesByUser(tenantId, startDate, endDate, branchId = null, user = null) {
+    const query = {
+      tenantId,
+      createdAt: {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      },
+      status: { $ne: SALE_STATUS.CANCELLED },
+    };
+
+    // Si el usuario es CASHIER, solo puede ver sus propias ventas
+    if (user && user.role === 'CASHIER') {
+      query.cashierId = user.userId;
+    }
+
+    if (branchId) {
+      query.branchId = branchId;
+    }
+
+    const sales = await Sale.find(query)
+      .populate('cashierId', 'firstName lastName email')
+      .populate('branchId', 'name code')
+      .sort({ createdAt: -1 });
+
+    // Agrupar ventas por usuario
+    const salesByUser = sales.reduce((acc, sale) => {
+      const userId = sale.cashierId?._id?.toString() || 'unknown';
+      const userName = sale.cashierId 
+        ? `${sale.cashierId.firstName} ${sale.cashierId.lastName}`
+        : 'Usuario Desconocido';
+      const userEmail = sale.cashierId?.email || '';
+
+      if (!acc[userId]) {
+        acc[userId] = {
+          userId,
+          userName,
+          userEmail,
+          totalSales: 0,
+          totalRevenue: 0,
+          totalDiscount: 0,
+          totalTax: 0,
+          averageTicket: 0,
+          sales: [],
+        };
+      }
+
+      acc[userId].totalSales += 1;
+      acc[userId].totalRevenue += sale.total;
+      acc[userId].totalDiscount += sale.discount;
+      acc[userId].totalTax += sale.taxAmount;
+      acc[userId].sales.push({
+        _id: sale._id,
+        saleNumber: sale.saleNumber,
+        total: sale.total,
+        discount: sale.discount,
+        taxAmount: sale.taxAmount,
+        status: sale.status,
+        branchName: sale.branchId?.name || 'N/A',
+        branchCode: sale.branchId?.code || 'N/A',
+        itemsCount: sale.items.length,
+        createdAt: sale.createdAt,
+      });
+
+      return acc;
+    }, {});
+
+    // Calcular ticket promedio y ordenar
+    const usersData = Object.values(salesByUser).map(userData => ({
+      ...userData,
+      averageTicket: userData.totalSales > 0 ? userData.totalRevenue / userData.totalSales : 0,
+    })).sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+    const totalSales = sales.length;
+    const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0);
+
+    return {
+      users: usersData,
+      summary: {
+        totalUsers: usersData.length,
+        totalSales,
+        totalRevenue,
+        averageRevenuePerUser: usersData.length > 0 ? totalRevenue / usersData.length : 0,
       },
     };
   }

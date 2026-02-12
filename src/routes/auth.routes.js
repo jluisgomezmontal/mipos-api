@@ -26,28 +26,28 @@ router.get('/me', authController.getMe);
 
 router.patch(
   '/tenant',
-  authorize(USER_ROLES.OWNER, USER_ROLES.ADMIN),
+  authorize(USER_ROLES.OWNER),
   validate(updateTenantSchema),
   authController.updateTenant
 );
 
 router.patch(
   '/tenant/settings',
-  authorize(USER_ROLES.OWNER, USER_ROLES.ADMIN),
+  authorize(USER_ROLES.OWNER),
   validate(updateTenantSettingsSchema),
   authController.updateTenantSettings
 );
 
 router.post(
   '/users',
-  authorize(USER_ROLES.OWNER, USER_ROLES.ADMIN),
+  authorize(USER_ROLES.OWNER),
   validate(createUserSchema),
   authController.createUser
 );
 
-router.get('/users', authorize(USER_ROLES.OWNER, USER_ROLES.ADMIN), authController.getUsers);
+router.get('/users', authorize(USER_ROLES.OWNER), authController.getUsers);
 
-router.patch('/users/:id', authorize(USER_ROLES.OWNER, USER_ROLES.ADMIN), authController.updateUser);
+router.patch('/users/:id', authorize(USER_ROLES.OWNER), authController.updateUser);
 
 router.delete('/users/:id', authorize(USER_ROLES.OWNER), authController.deleteUser);
 

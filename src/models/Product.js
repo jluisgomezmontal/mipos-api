@@ -5,18 +5,18 @@ const productSchema = new mongoose.Schema(
     tenantId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Tenant',
-      required: [true, 'Tenant ID is required'],
+      required: [true, 'El ID del tenant es requerido'],
       index: true,
     },
     sku: {
       type: String,
-      required: [true, 'SKU is required'],
+      required: [true, 'El SKU es requerido'],
       trim: true,
       uppercase: true,
     },
     name: {
       type: String,
-      required: [true, 'Product name is required'],
+      required: [true, 'El nombre del producto es requerido'],
       trim: true,
       index: true,
     },
@@ -31,19 +31,19 @@ const productSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      required: [true, 'Price is required'],
-      min: [0, 'Price cannot be negative'],
+      required: [true, 'El precio es requerido'],
+      min: [0, 'El precio no puede ser negativo'],
     },
     cost: {
       type: Number,
       default: 0,
-      min: [0, 'Cost cannot be negative'],
+      min: [0, 'El costo no puede ser negativo'],
     },
     taxRate: {
       type: Number,
       default: 0,
-      min: [0, 'Tax rate cannot be negative'],
-      max: [100, 'Tax rate cannot exceed 100%'],
+      min: [0, 'La tasa de impuesto no puede ser negativa'],
+      max: [100, 'La tasa de impuesto no puede exceder el 100%'],
     },
     barcode: {
       type: String,
