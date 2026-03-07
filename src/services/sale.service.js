@@ -2,9 +2,10 @@ import Sale from '../models/Sale.js';
 import Product from '../models/Product.js';
 import Branch from '../models/Branch.js';
 import Tenant from '../models/Tenant.js';
+import CashRegisterClosing from '../models/CashRegisterClosing.js';
 import inventoryService from './inventory.service.js';
 import { NotFoundError, AppError } from '../utils/errors.js';
-import { SALE_STATUS } from '../utils/constants.js';
+import { SALE_STATUS, CASH_REGISTER_STATUS } from '../utils/constants.js';
 import mongoose from 'mongoose';
 
 class SaleService {
@@ -37,6 +38,16 @@ class SaleService {
 
     try {
       const { branchId, items, discount = 0, customerId, customerInfo, notes } = saleData;
+
+      const openRegister = await CashRegisterClosing.findOne({
+        tenantId,
+        cashierId: userId,
+        status: CASH_REGISTER_STATUS.OPEN,
+      });
+
+      if (!openRegister) {
+        throw new AppError('No tienes un turno abierto. Debes abrir un turno en Corte de Caja antes de realizar ventas.', 400);
+      }
 
       const branch = await Branch.findOne({ _id: branchId, tenantId, isActive: true });
       if (!branch) {

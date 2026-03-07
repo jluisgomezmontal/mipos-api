@@ -31,6 +31,11 @@ export const INVENTORY_MOVEMENT_TYPE = {
   SALE: 'SALE',
 };
 
+export const CASH_REGISTER_STATUS = {
+  OPEN: 'OPEN',
+  CLOSED: 'CLOSED',
+};
+
 export const HTTP_STATUS = {
   OK: 200,
   CREATED: 201,

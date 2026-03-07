@@ -6,6 +6,8 @@ import inventoryRoutes from './inventory.routes.js';
 import saleRoutes from './sale.routes.js';
 import paymentRoutes from './payment.routes.js';
 import reportRoutes from './report.routes.js';
+import adminRoutes from './admin.routes.js';
+import cashRegisterRoutes from './cashRegister.routes.js';
 
 const router = express.Router();
 
@@ -16,6 +18,8 @@ router.use('/inventory', inventoryRoutes);
 router.use('/sales', saleRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/reports', reportRoutes);
+router.use('/admin', adminRoutes);
+router.use('/cash-register', cashRegisterRoutes);
 
 router.get('/health', (req, res) => {
   res.status(200).json({

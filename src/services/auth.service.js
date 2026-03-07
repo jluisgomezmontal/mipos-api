@@ -8,7 +8,7 @@ class AuthService {
   async registerTenant(tenantData, ownerData) {
     const existingTenant = await Tenant.findOne({ email: tenantData.email });
     if (existingTenant) {
-      throw new ConflictError('Tenant with this email already exists');
+      throw new ConflictError('Tenant con este correo electrónico ya existe');
     }
 
     const tenant = await Tenant.create(tenantData);
@@ -20,7 +20,7 @@ class AuthService {
 
     if (existingUser) {
       await Tenant.findByIdAndDelete(tenant._id);
-      throw new ConflictError('User with this email already exists');
+      throw new ConflictError('User con este correo electrónico ya existe');
     }
 
     const owner = await User.create({
@@ -44,15 +44,18 @@ class AuthService {
   }
 
   async login(email, password) {
-    const user = await User.findOne({ email, isActive: true }).select('+password');
-
+    const user = await User.findOne({ email }).select('+password');
+    console.log(user)
+    if (user.isActive === false) {
+      throw new UnauthorizedError('El usuario está inactivo');
+    }
     if (!user || !(await user.comparePassword(password))) {
-      throw new UnauthorizedError('Invalid credentials');
+      throw new UnauthorizedError('Credenciales inválidas');
     }
 
     const tenant = await Tenant.findById(user.tenantId);
     if (!tenant || !tenant.isActive) {
-      throw new UnauthorizedError('Tenant is inactive');
+      throw new UnauthorizedError('Tenant está inactivo');
     }
 
     const tokens = generateTokenPair(user._id, user.tenantId, user.role);
@@ -75,7 +78,7 @@ class AuthService {
     const user = await User.findById(decoded.userId).select('+refreshToken');
 
     if (!user || !user.isActive || user.refreshToken !== refreshToken) {
-      throw new UnauthorizedError('Invalid refresh token');
+      throw new UnauthorizedError('Token de actualización inválido');
     }
 
     const tokens = generateTokenPair(user._id, user.tenantId, user.role);
@@ -94,7 +97,7 @@ class AuthService {
     });
 
     if (existingUser) {
-      throw new ConflictError('User with this email already exists in this tenant');
+      throw new ConflictError('User con este correo electrónico ya existe en este inquilino');
     }
 
     const user = await User.create({
@@ -126,7 +129,7 @@ class AuthService {
       });
 
       if (existingUser) {
-        throw new ConflictError('Email already in use');
+        throw new ConflictError('Email ya en uso');
       }
     }
 
@@ -140,11 +143,11 @@ class AuthService {
     const user = await User.findOne({ _id: userId, tenantId });
 
     if (!user) {
-      throw new NotFoundError('User not found');
+      throw new NotFoundError('Usuario no encontrado');
     }
 
     if (user.role === USER_ROLES.OWNER) {
-      throw new ConflictError('Cannot delete owner user');
+      throw new ConflictError('No se puede eliminar el usuario dueño');
     }
 
     await User.findByIdAndUpdate(userId, { isActive: false });
@@ -156,7 +159,7 @@ class AuthService {
     const tenant = await Tenant.findById(tenantId);
 
     if (!tenant) {
-      throw new NotFoundError('Tenant not found');
+      throw new NotFoundError('Tenant no encontrado');
     }
 
     if (updateData.email && updateData.email !== tenant.email) {
@@ -166,7 +169,7 @@ class AuthService {
       });
 
       if (existingTenant) {
-        throw new ConflictError('Email already in use');
+        throw new ConflictError('Email ya en uso');
       }
     }
 
@@ -177,7 +180,7 @@ class AuthService {
       });
 
       if (existingTenant) {
-        throw new ConflictError('Tax ID already in use');
+        throw new ConflictError('Tax ID ya en uso');
       }
     }
 
@@ -191,7 +194,7 @@ class AuthService {
     const tenant = await Tenant.findById(tenantId);
 
     if (!tenant) {
-      throw new NotFoundError('Tenant not found');
+      throw new NotFoundError('Tenant no encontrado');
     }
 
     tenant.settings = {
