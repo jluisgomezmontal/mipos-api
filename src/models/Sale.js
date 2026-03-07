@@ -13,6 +13,7 @@ const saleItemSchema = new mongoose.Schema({
     price: { type: Number, required: true },
     cost: { type: Number, default: 0 },
     taxRate: { type: Number, default: 0 },
+    imageUrl: { type: String },
   },
   quantity: {
     type: Number,

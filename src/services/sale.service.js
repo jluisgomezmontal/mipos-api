@@ -91,6 +91,7 @@ class SaleService {
             price: product.price,
             cost: product.cost || 0,
             taxRate: itemTaxRate,
+            imageUrl: product.image,
           },
           quantity: item.quantity,
           unitPrice,
