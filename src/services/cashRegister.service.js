@@ -66,12 +66,9 @@ class CashRegisterService {
   async getCurrentOpenRegister(tenantId, userId, userRole) {
     const query = {
       tenantId,
+      cashierId: userId,
       status: CASH_REGISTER_STATUS.OPEN,
     };
-
-    if (userRole === USER_ROLES.CASHIER) {
-      query.cashierId = userId;
-    }
 
     const cashRegister = await CashRegisterClosing.findOne(query)
       .populate('branchId', 'name code')
